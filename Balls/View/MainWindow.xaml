@@ -23,7 +23,9 @@
                  TextWrapping="Wrap" Text="{Binding NumberOfBalls}"  
                  VerticalAlignment="Top" Width="200" Height="40" TextAlignment="Center" 
                  FontSize="24px" BorderBrush="Black" BorderThickness="3,3,3,3" Grid.Row="1" />
-        <Button Margin="195,510,195,5" Content="Start" FontSize="30" Command="{Binding Acommand}" Grid.Row="1" />
+        <Button HorizontalAlignment="Center" Margin="0,507,300,10" Content=" Start " FontSize="30" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding Scommand1}" Grid.Row="1" />
+        <Button HorizontalAlignment="Center" Margin="0,507,0,10" Content=" Create " FontSize="30" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding Acommand}" Grid.Row="1" />
+        <Button HorizontalAlignment="Center" Margin="0,507,-300,10" Content=" Stop " FontSize="30" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding Scommand2}" Grid.Row="1" />
 
     </Grid>
 

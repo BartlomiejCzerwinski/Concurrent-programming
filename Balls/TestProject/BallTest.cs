@@ -36,16 +36,9 @@ namespace BallTest
             Assert.AreEqual(ball.X, 1);
             Assert.AreEqual(ball.Y, 2);
         }
-        [TestMethod]
-        public void TestMove()
-        {
-            ball.MoveBall(100, 100);
-            Assert.AreNotEqual(ball.X, 1);
-            Assert.AreNotEqual(ball.Y, 2);
-        }
 
         [TestMethod]
-        public void TestCoords()
+        public void TestCords2()
         {
             L = LogicAbstractApi.CreateApi(100, 100, timer);
             L.CreateBallsList(1);
@@ -54,7 +47,12 @@ namespace BallTest
             Assert.IsTrue(L.balls[0].Y < 100 - 20);
         }
 
-
-
+        [TestMethod]
+        public void TestMove()
+        {
+            ball.MoveBall(100, 100);
+            Assert.AreNotEqual(ball.X, 1);
+            Assert.AreNotEqual(ball.Y, 2);
+        }
     }
 }

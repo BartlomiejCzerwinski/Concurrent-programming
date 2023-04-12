@@ -17,6 +17,8 @@ namespace Model
         public abstract void CreateEllipses(int ballVal);
         public abstract void Move();
 
+        public abstract void Start();
+
         public abstract void Stop();
 
 
@@ -67,8 +69,6 @@ namespace Model
                 ellipseCollection.Add(ellipse);
                 Canvas.Children.Add(ellipse);
             }
-            LogicLayer.Start();
-
         }
 
         public override void Move()
@@ -83,6 +83,11 @@ namespace Model
                 Canvas.Children.Remove(ellipseCollection[ellipseCollection.Count - 1]);
                 ellipseCollection.Remove(ellipseCollection[ellipseCollection.Count - 1]);
             }
+        }
+
+        public override void Start()
+        {
+            LogicLayer.Start();
         }
 
         public override void Stop()

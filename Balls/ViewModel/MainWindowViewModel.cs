@@ -13,13 +13,17 @@ namespace ViewModel
         {
 
             ModelLayer = ModelAbstractApi.CreateApi(360, 360);
-            Scommand = new RelayCommand(Stop);
+            Scommand1 = new RelayCommand(Start);
+            Scommand2 = new RelayCommand(Stop);
             Acommand = new RelayCommand(CreateEllipses);
 
         }
 
 
-        public ICommand Scommand
+        public ICommand Scommand1
+        { get; set; }
+
+        public ICommand Scommand2
         { get; set; }
 
         public ICommand Acommand
@@ -44,6 +48,11 @@ namespace ViewModel
             get => ModelLayer.Canvas;
 
         }
+        private void Start()
+        {
+            ModelLayer.Start();
+        }
+
 
         private void CreateEllipses()
         {
