@@ -41,7 +41,7 @@ namespace Logic
             Height = height;
             timer = WPFTimer;
             balls = new List<Ball>();
-            SetInterval(5);
+            SetInterval(1);
             timer.Tick += (sender, args) => UpdateBalls();
         }
         public override void CreateBallsList(int number)

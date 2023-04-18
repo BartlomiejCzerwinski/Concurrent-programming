@@ -30,6 +30,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject", "TestProject\
 		{BF02E376-A70A-45AC-9198-9F4F102780AB} = {BF02E376-A70A-45AC-9198-9F4F102780AB}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentation", "{3EF3DD77-6547-417F-94A2-91B09A11F3FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{23EC2035-CDE5-4C3A-8940-8F2F6DE32A8B} = {3EF3DD77-6547-417F-94A2-91B09A11F3FC}
+		{735506B2-4276-43E9-879A-20566DD98E68} = {3EF3DD77-6547-417F-94A2-91B09A11F3FC}
+		{BC084F47-CFE3-4630-9FF2-A0728C5A76C2} = {3EF3DD77-6547-417F-94A2-91B09A11F3FC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {48256742-52DD-4741-B6B1-9DFDDC8BD4A0}
