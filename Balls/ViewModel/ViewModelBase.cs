@@ -2,8 +2,8 @@
 using System.Runtime.CompilerServices;
 
 namespace ViewModel
-{
-    public class ViewModelBase
+{ 
+    public class ViewModelBase : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 

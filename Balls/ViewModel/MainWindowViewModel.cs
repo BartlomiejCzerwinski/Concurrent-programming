@@ -1,5 +1,5 @@
 ﻿using Model;
-using System.Windows.Controls;
+using System.Collections;
 using System.Windows.Input;
 
 namespace ViewModel
@@ -7,63 +7,123 @@ namespace ViewModel
     public class MainWindowViewModel : ViewModelBase
     {
         private readonly ModelAbstractApi ModelLayer;
-        private int _NumberOfBalls;
-
+        private int _BallVal = 1;
+        private bool _isStopEnabled = false;
+        private bool isStartEnabled = false;
+        private bool _isAddEnabled = true;
+        private int size = 0;
+        private IList _balls;
+        public ICommand AddCommand { get; set; }
+        public ICommand RunCommand { get; set; }
+        public ICommand StopCommand
+        { get; set; }
         public MainWindowViewModel()
         {
 
-            ModelLayer = ModelAbstractApi.CreateApi(360, 360);
-            Scommand1 = new RelayCommand(Start);
-            Scommand2 = new RelayCommand(Stop);
-            Acommand = new RelayCommand(CreateEllipses);
+            ModelLayer = ModelAbstractApi.CreateApi();
+            StopCommand = new RelayCommand(Stop);
+            AddCommand = new RelayCommand(AddBalls);
+            RunCommand = new RelayCommand(Start);
 
         }
 
-
-        public ICommand Scommand1
-        { get; set; }
-
-        public ICommand Scommand2
-        { get; set; }
-
-        public ICommand Acommand
-        { get; set; }
-
-
-        public int NumberOfBalls
+        public bool isStopEnabled
         {
-            get
-            {
-                return _NumberOfBalls;
-            }
+            get { return _isStopEnabled; }
             set
             {
-                _NumberOfBalls = value;
+                _isStopEnabled = value;
                 RaisePropertyChanged();
             }
         }
 
-        public Canvas Canvas
+        public bool isRunEnabled
         {
-            get => ModelLayer.Canvas;
+            get { return isStartEnabled; }
+            set
+            {
+                isStartEnabled = value;
+                RaisePropertyChanged();
+            }
+        }
 
+        public bool isAddEnabled
+        {
+            get
+            {
+                return _isAddEnabled;
+            }
+            set
+            {
+                _isAddEnabled = value;
+
+                RaisePropertyChanged();
+            }
+        }
+
+        public int BallVal
+        {
+            get
+            {
+
+                return _BallVal;
+            }
+            set
+            {
+
+                _BallVal = value;
+                RaisePropertyChanged();
+
+
+            }
+
+        }
+
+        private void AddBalls()
+        {
+            size += BallVal;
+            if (size > 0)
+            {
+                isRunEnabled = true;
+            }
+            else
+            {
+                size = 0;
+                isRunEnabled = false;
+            }
+            Balls = ModelLayer.Start(BallVal);
+            BallVal = 1;
+
+
+        }
+        private void Stop()
+        {
+            isStopEnabled = false;
+            isAddEnabled = true;
+            isRunEnabled = true;
+            ModelLayer.Stop();
         }
         private void Start()
         {
-            ModelLayer.Start();
+            isStopEnabled = true;
+            isRunEnabled = false;
+            isAddEnabled = false;
+            ModelLayer.StartMoving();
         }
-
-
-        private void CreateEllipses()
+        public IList Balls
         {
-            ModelLayer.CreateEllipses(NumberOfBalls);
-        }
+            get => _balls;
+            set
+            {
+                if (value.Equals(_balls))
+                {
+                    return;
+                }
 
-        private void Stop()
-        {
-            ModelLayer.Stop();
+                _balls = value;
+                RaisePropertyChanged();
+            }
         }
-
 
 
     }
