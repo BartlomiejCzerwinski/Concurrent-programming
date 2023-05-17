@@ -109,6 +109,11 @@ namespace Data
         public double Weight { get => weight; }
         public void Move()
         {
+            if(X1 == 0 | Y1 == 0)
+            {
+                X1 += 5;
+                Y1 += 5;
+            }
             X0 += X1;
             Y0 += Y1;
         }

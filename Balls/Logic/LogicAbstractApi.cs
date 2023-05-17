@@ -48,7 +48,7 @@ namespace Logic
         {
             for (int i = 0; i < dataLayer.GetCount; i++)
             {
-                dataLayer.GetBall(i).CreateTask(15);
+                dataLayer.GetBall(i).CreateTask(20);
 
             }
         }

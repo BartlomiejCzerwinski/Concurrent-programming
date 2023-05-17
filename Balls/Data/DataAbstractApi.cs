@@ -43,13 +43,17 @@ namespace Data
                 for (int i = 0; i < number; i++)
                 {
                     mutex.WaitOne();
-                    int r = 20;
+                    int r = 15;
                     int weight = 30;
                     int x0 = random.Next(r, Width - r);
                     int y0 = random.Next(r, Height - r);
-                    int x1 = random.Next(-5, 5);
-                    int y1 = random.Next(-5, 5);
-                    
+                    int x1, y1;
+                    do
+                    {
+                        x1 = random.Next(-5, 5);
+                        y1 = random.Next(-5, 5);
+                    } while (x1 == 0 && y1 == 0);
+
                     Ball ball = new Ball(i + ballsCount, x0, y0, x1, y1, r, weight);
                     balls.Add(ball);
                     mutex.ReleaseMutex();

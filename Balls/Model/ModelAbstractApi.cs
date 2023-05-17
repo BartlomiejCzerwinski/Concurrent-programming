@@ -39,7 +39,7 @@ namespace Model
         public override void StartMoving()
         {
             LogicLayer.Start();
-        }
+        }   
 
 
         public override void Stop()
