@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,11 +14,9 @@ namespace Logic
     {
         public abstract int Width { get; }
         public abstract int Height { get; }
-        public abstract int GetCount { get; }
         public abstract IList CreateBalls(int count);
         public abstract void Start();
         public abstract void Stop();
-        public abstract IBall GetBall(int index);
         public abstract void WallCollision(IBall ball);
         public abstract void ChangeDirection(IBall ball);
         public abstract void BallPositionChanged(object sender, PropertyChangedEventArgs args);
@@ -28,39 +28,46 @@ namespace Logic
     }
     internal class LogicApi : LogicAbstractApi
     {
+        private ObservableCollection<IBall> balls { get; }
         private int width;
         private int height;
         private readonly DataAbstractApi dataLayer;
         private readonly Mutex mutex = new Mutex();
+        private ConcurrentQueue<IBall> queue;
 
         public LogicApi()
         {
+            balls = new ObservableCollection<IBall>();
             dataLayer = DataAbstractApi.CreateApi();
             this.width = dataLayer.Width;
             this.height = dataLayer.Height;
+            this.queue = new ConcurrentQueue<IBall>();
 
         }
 
         public override int Width { get; }
         public override int Height { get; }
+        public ObservableCollection<IBall> Balls => balls;
 
         public override void Start()
         {
-            for (int i = 0; i < dataLayer.GetCount; i++)
+            for (int i = 0; i < balls.Count; i++)
             {
-                dataLayer.GetBall(i).CreateTask(20);
-
+                balls[i].PropertyChanged += BallPositionChanged;
+                balls[i].CreateTask(20, queue);
             }
+            dataLayer.CreateLoggingTask(queue);
         }
 
         public override void Stop()
         {
-            for (int i = 0; i < dataLayer.GetCount; i++)
+            for (int i = 0; i < balls.Count; i++)
             {
-                dataLayer.GetBall(i).Stop();
-
+                balls[i].Stop();
+                balls[i].PropertyChanged -= BallPositionChanged;
             }
-        }
+            dataLayer.StopLoggingTask();
+        }   
 
 
         public override void WallCollision(IBall ball)
@@ -99,9 +106,9 @@ namespace Logic
 
         public override void ChangeDirection(IBall ball)
         {
-            for (int i = 0; i < dataLayer.GetCount; i++)
+            for (int i = 0; i < balls.Count; i++)
             {
-                IBall secondBall = dataLayer.GetBall(i);
+                IBall secondBall = balls[i];
                 if (ball.Identifier == secondBall.Identifier)
                 {
                     continue;
@@ -184,21 +191,39 @@ namespace Logic
 
         public override IList CreateBalls(int number)
         {
-            int previousCount = dataLayer.GetCount;
-            IList temp = dataLayer.CreateBalls(number);
-            for (int i = 0; i < dataLayer.GetCount - previousCount; i++)
+            int tempNumber = balls.Count;
+            for (int i = tempNumber; i < tempNumber + number; i++)
             {
-                dataLayer.GetBall(previousCount + i).PropertyChanged += BallPositionChanged;
+                bool contain = true;
+                bool count;
+
+                while (contain)
+                {
+                    balls.Add(dataLayer.CreateBall(i + 1));
+                    count = false;
+                    for (int j = 0; j < i; j++)
+                    {
+
+                        if (balls[i].X0 <= balls[j].X0 + 2 * balls[j].R && balls[i].X0 + 2 * balls[i].R >= balls[j].X0)
+                        {
+                            if (balls[i].Y0 <= balls[j].Y0 + 2 * balls[j].R && balls[i].Y0 + 2 * balls[i].R >= balls[j].Y0)
+                            {
+
+                                count = true;
+                                balls.Remove(balls[i]);
+                                break;
+                            }
+                        }
+                    }
+                    if (!count)
+                    {
+                        contain = false;
+                    }
+                }
+               
             }
-            return temp;
+            return balls;
         }
-
-        public override IBall GetBall(int index)
-        {
-            return dataLayer.GetBall(index);
-        }
-
-        public override int GetCount { get => dataLayer.GetCount; }
 
         public override void BallPositionChanged(object sender, PropertyChangedEventArgs args)
         {

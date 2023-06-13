@@ -1,7 +1,13 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.Net.Sockets;
+using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Data
 {
@@ -9,10 +15,10 @@ namespace Data
     {
         public abstract int Width { get; }
         public abstract int Height { get; }
-        public abstract int GetCount { get; }
-        public abstract IList CreateBalls(int number);
 
-        public abstract IBall GetBall(int index);
+        public abstract IBall CreateBall(int number);
+        public abstract void StopLoggingTask();
+        public abstract Task CreateLoggingTask(ConcurrentQueue<IBall> logQueue);
         public static DataAbstractApi CreateApi()
         {
             return new DataApi();
@@ -20,53 +26,78 @@ namespace Data
     }
     internal class DataApi : DataAbstractApi
     {
-        private ObservableCollection<IBall> balls { get; }
-        private readonly Mutex mutex = new Mutex();
-
         private readonly Random random = new Random();
+        private readonly Stopwatch stopWatch;
+        private bool stop;
+        private object locker = new object();
 
         public override int Width { get; }
         public override int Height { get; }
-        public ObservableCollection<IBall> Balls => balls;
         public DataApi()
         {
-            balls = new ObservableCollection<IBall>();
             Height = Board.height;
             Width = Board.width;
+            stopWatch = new Stopwatch();
         }
-        public override IList CreateBalls(int number)
+        public override IBall CreateBall(int number)
         {
             Random random = new Random();
-            if (number > 0)
+                    
+            int r = 15;
+            int weight = random.Next(15, 30);
+            int x0 = random.Next(r, Width - r);
+            int y0 = random.Next(r, Height - r);
+            int x1, y1;
+            do
             {
-                int ballsCount = balls.Count;
-                for (int i = 0; i < number; i++)
-                {
-                    mutex.WaitOne();
-                    int r = 15;
-                    int weight = 30;
-                    int x0 = random.Next(r, Width - r);
-                    int y0 = random.Next(r, Height - r);
-                    int x1, y1;
-                    do
-                    {
-                        x1 = random.Next(-5, 5);
-                        y1 = random.Next(-5, 5);
-                    } while (x1 == 0 && y1 == 0);
+                x1 = random.Next(-5, 5);
+                y1 = random.Next(-5, 5);
+            } while (x1 == 0 && y1 == 0);
 
-                    Ball ball = new Ball(i + ballsCount, x0, y0, x1, y1, r, weight);
-                    balls.Add(ball);
-                    mutex.ReleaseMutex();
-                }
-            }
-                return balls;
+            Ball ball = new Ball(number, x0, y0, x1, y1, r, weight);
+                 
+          return ball;
         }
-        public override int GetCount { get => balls.Count; }
 
-        public override IBall GetBall(int index)
+        public override void StopLoggingTask()
         {
-            return balls[index];
+            stop = true;
         }
+
+        public override Task CreateLoggingTask(ConcurrentQueue<IBall> logQueue)
+        {
+            stop = false;
+            return CallLogger(logQueue);
+        }
+
+        internal async Task CallLogger(ConcurrentQueue<IBall> logQueue)
+        {
+            while (!stop)
+            {
+                stopWatch.Reset();
+                stopWatch.Start();
+                logQueue.TryDequeue(out IBall logObject);
+                if (logObject != null)
+                {
+                    string diagnostics = JsonSerializer.Serialize(logObject);
+                    string date = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.fff");
+                    string log = "{" + String.Format("\n\t\"Date\": \"{0}\",\n\t\"Info\":{1}\n", date, diagnostics) + "}";
+
+                    lock (locker)
+                    {
+                        File.AppendAllText("LogFile.json", log);
+                    }
+                }
+                else
+                {
+                    return;
+                }
+                stopWatch.Stop();
+                await Task.Delay((int)(stopWatch.ElapsedMilliseconds));
+            }
+        }
+
+
 
     }
 }

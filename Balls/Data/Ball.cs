@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -14,11 +15,12 @@ namespace Data
         double Y1 { get; set; }
         int R { get;}
         double Weight { get; }
-
         int Identifier { get; }
-        void Move();
+
+        void SaveRequest(ConcurrentQueue<IBall> queue);
+        void Move(double time, ConcurrentQueue<IBall> queue);
         void Stop();
-        void CreateTask(int period);
+        void CreateTask(int period, ConcurrentQueue<IBall> queue);
     }
 
     internal class Ball : IBall
@@ -34,6 +36,7 @@ namespace Data
         private readonly Stopwatch stopwatch = new Stopwatch();
         private Task task;
         private bool stop = false;
+        private object locker = new object();
 
         public Ball(int id, double x0, double y0, double x1, double y1, int r, double weight)
         {
@@ -57,9 +60,7 @@ namespace Data
                 {
                     return;
                 }
-
                 x0 = value;
-                RaisePropertyChanged(nameof(X0));
             }
         }
         public double Y0
@@ -71,9 +72,7 @@ namespace Data
                 {
                     return;
                 }
-
                 y0 = value;
-                RaisePropertyChanged(nameof(Y0));
             }
         }
 
@@ -107,15 +106,21 @@ namespace Data
         public int R { get => r; }
         public int D { get => d; }
         public double Weight { get => weight; }
-        public void Move()
+        public void Move(double time, ConcurrentQueue<IBall> queue)
         {
-            if(X1 == 0 | Y1 == 0)
+            lock (locker) 
             {
-                X1 += 5;
-                Y1 += 5;
+                X0 += X1 * time;
+                RaisePropertyChanged(nameof(X0));
+                Y0 += Y1 * time;
+                RaisePropertyChanged(nameof(Y0));
+                SaveRequest(queue);
             }
-            X0 += X1;
-            Y0 += Y1;
+        }
+
+        public void SaveRequest(ConcurrentQueue<IBall> queue)
+        {
+            queue.Enqueue(new Ball(this.Identifier, this.X0, this.Y0, this.X1, this.Y1, this.R, this.Weight));
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -124,13 +129,13 @@ namespace Data
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-        public void CreateTask(int period)
+        public void CreateTask(int period, ConcurrentQueue<IBall> queue)
         {
             stop = false;
-            task = Run(period);
+            task = Run(period, queue);
         }
 
-        private async Task Run(int period)
+        private async Task Run(int period, ConcurrentQueue<IBall> queue)
         {
             while (!stop)
             {
@@ -138,7 +143,7 @@ namespace Data
                 stopwatch.Start();
                 if (!stop)
                 {
-                    Move();
+                    Move(((period - stopwatch.ElapsedMilliseconds) / 12), queue);
                 }
                 stopwatch.Stop();
 
