@@ -30,6 +30,7 @@ namespace Data
         private readonly Stopwatch stopWatch;
         private bool stop;
         private object locker = new object();
+        private static System.Threading.Timer timer;
 
         public override int Width { get; }
         public override int Height { get; }
@@ -62,6 +63,7 @@ namespace Data
         public override void StopLoggingTask()
         {
             stop = true;
+            timer?.Dispose();
         }
 
         public override Task CreateLoggingTask(ConcurrentQueue<IBall> logQueue)
@@ -72,29 +74,26 @@ namespace Data
 
         internal async Task CallLogger(ConcurrentQueue<IBall> logQueue)
         {
-            while (!stop)
+            timer = new Timer(async state =>
             {
-                stopWatch.Reset();
-                stopWatch.Start();
-                logQueue.TryDequeue(out IBall logObject);
-                if (logObject != null)
+                if (!stop)
                 {
-                    string diagnostics = JsonSerializer.Serialize(logObject);
-                    string date = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.fff");
-                    string log = "{" + String.Format("\n\t\"Date\": \"{0}\",\n\t\"Info\":{1}\n", date, diagnostics) + "}";
-
-                    lock (locker)
+                    logQueue.TryDequeue(out IBall logObject);
+                    if (logObject != null)
                     {
-                        File.AppendAllText("LogFile.json", log);
+                        string diagnostics = JsonSerializer.Serialize(logObject);
+                        string date = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss.fff");
+                        string log = "{" + String.Format("\n\t\"Date\": \"{0}\",\n\t\"Info\":{1}\n", date, diagnostics) + "}";
+
+                        lock (locker)
+                        {
+                            File.AppendAllText("LogFile.json", log);
+                        }
                     }
                 }
-                else
-                {
-                    return;
-                }
-                stopWatch.Stop();
-                await Task.Delay((int)(stopWatch.ElapsedMilliseconds));
-            }
+            }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+            
+
         }
 
 

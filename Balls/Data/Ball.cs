@@ -38,6 +38,7 @@ namespace Data
         private bool stop = false;
         private object locker = new object();
 
+
         public Ball(int id, double x0, double y0, double x1, double y1, int r, double weight)
         {
             identifier = id;
